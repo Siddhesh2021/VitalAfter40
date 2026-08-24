@@ -1,0 +1,1454 @@
+Build the COMPLETE production-quality Figma UI/UX for the doctor-led 40+ Health, Fitness, Wellness & Longevity platform described in the attached skill.md.
+
+IMPORTANT:
+The skill.md is the source of truth for the product requirements.
+
+Do not create only a landing page.
+Do not create only a questionnaire.
+Do not create only a dashboard.
+
+Create the COMPLETE PRODUCT ECOSYSTEM:
+1. Public marketing website
+2. Health assessment
+3. Personalized recommendation experience
+4. Program/service selection
+5. Group and individual booking
+6. Checkout/payment UX
+7. User account
+8. Mobile-first PWA
+9. Sessions/Zoom experience
+10. Progress tracking
+11. Content/video library
+12. Doctor/professional profiles
+13. CRM-oriented user flows
+14. WhatsApp communication states
+15. Meta lead/campaign tracking UX
+16. COMPLETE ADMIN DASHBOARD
+17. COMPLETE ADMIN CMS
+18. COMPLETE BILINGUAL ENGLISH + MARATHI SYSTEM
+19. Dynamic assessment/question engine
+20. Dynamic recommendation engine
+21. Dynamic programs/packages/services
+22. Dynamic pricing and batches
+23. Dynamic professionals
+24. Dynamic content
+25. Dynamic translations
+26. Analytics
+27. Payments
+28. Notifications
+29. All loading, empty, error and success states.
+
+==================================================
+PRODUCT
+==================================================
+
+This is a doctor-led health, fitness, wellness and longevity platform for adults aged 40+.
+
+The doctor is the FACE OF THE BRAND and the primary authority.
+
+The platform combines:
+
+- Pilates
+- Online Zoom Pilates classes
+- Group Pilates batches
+- Individual Pilates sessions
+- Recorded Pilates programs
+- Strength and muscle-building programs
+- Gym trainers
+- Nutritionist-led programs
+- Physiotherapy
+- Recorded physiotherapy programs
+- Doctor / internal medicine consultations
+- Hormonal wellness
+- Men's sexual wellness
+- Women's wellness
+- Healthy ageing
+- Personalized health/fitness recommendations
+
+The positioning is:
+
+"Doctor-led health, fitness and wellness for life after 40."
+
+The experience should feel like:
+
+FITTR's ecosystem
++
+Traya's assessment/personalization UX
++
+premium modern health-tech branding
++
+doctor-led trust
+
+BUT DO NOT CLONE FITTR OR TRAYA.
+
+Create an original brand system.
+
+==================================================
+DESIGN DIRECTION
+==================================================
+
+Make this look like a premium funded health-tech startup.
+
+It should NOT look like:
+
+- a traditional hospital
+- a generic gym
+- a generic Pilates studio
+- a basic medical booking website
+- a Google Form
+- a government healthcare portal
+
+It should feel:
+
+- premium
+- sophisticated
+- trustworthy
+- human
+- modern
+- energetic
+- calming
+- aspirational
+- highly usable
+- mobile-first
+
+The audience is 40+, therefore the visual design must be modern without becoming childish or overly "Gen-Z".
+
+Use:
+- large editorial typography
+- cinematic imagery
+- premium cards
+- subtle motion
+- clean whitespace
+- tasteful gradients
+- muted sage/green wellness accents
+- deep charcoal/near-black premium sections
+- warm off-white surfaces
+- elegant dark/light contrast
+
+Avoid excessive:
+- neon
+- glassmorphism
+- gradients
+- tiny text
+- decorative UI
+- unnecessary animation
+
+==================================================
+BRAND HERO
+==================================================
+
+Use the concept:
+
+"Your best years aren't behind you.
+They're stronger ahead."
+
+Supporting copy:
+
+"Doctor-led health, fitness and wellness programs designed around your body, your goals and your life after 40."
+
+Primary CTA:
+
+"Take Your Health Assessment"
+
+Secondary CTA:
+
+"Explore Programs"
+
+The doctor should be visually prominent.
+
+The doctor is NOT just a team member.
+
+He is the central brand authority.
+
+==================================================
+RESPONSIVE
+==================================================
+
+Design mobile FIRST.
+
+Required primary frames:
+
+390px mobile
+360px mobile
+768px tablet
+1024px tablet/desktop
+1440px desktop
+
+Admin dashboard:
+1440px desktop
+1024px tablet
+390px mobile where appropriate
+
+Use Auto Layout everywhere.
+
+Create reusable components.
+
+Use variables/tokens.
+
+Create proper responsive variants.
+
+==================================================
+LANGUAGES
+==================================================
+
+MANDATORY:
+
+Everything must support:
+
+English
+Marathi
+
+English:
+EN
+
+Marathi:
+मराठी
+
+Do NOT treat Marathi as a translated-afterthought version.
+
+Marathi must be a first-class language.
+
+Every user-facing string must have:
+
+English version
+Marathi version
+
+This includes:
+
+- navigation
+- buttons
+- hero
+- programs
+- services
+- packages
+- professionals
+- assessment questions
+- assessment answers
+- assessment results
+- recommendation explanations
+- booking
+- checkout
+- dashboard
+- notifications
+- WhatsApp templates
+- FAQs
+- blog
+- videos
+- testimonials
+- footer
+- errors
+- empty states
+- success states
+
+Use a language switcher throughout the product.
+
+Marathi text must use a proper Devanagari-compatible font such as Noto Sans Devanagari.
+
+Do not make separate disconnected designs.
+
+Design one responsive system capable of rendering both languages.
+
+==================================================
+DYNAMIC CONTENT — ABSOLUTE REQUIREMENT
+==================================================
+
+Assume this will connect to a real backend/CMS.
+
+DO NOT hardcode user-facing business data.
+
+Everything below must be CMS/DATABASE driven:
+
+- programs
+- services
+- packages
+- prices
+- discounts
+- batches
+- schedules
+- Zoom links
+- professionals
+- professional bios
+- assessment questions
+- assessment answers
+- assessment logic
+- recommendation rules
+- recommendation explanations
+- testimonials
+- blogs
+- videos
+- FAQs
+- homepage sections
+- banners
+- CTA text
+- notifications
+- WhatsApp templates
+- English translations
+- Marathi translations
+
+Design the UI so an admin can control all of this.
+
+==================================================
+PUBLIC WEBSITE
+==================================================
+
+Create:
+
+Home
+About Doctor
+Why After 40
+Assessment
+Programs
+Pilates
+Group Pilates
+Individual Pilates
+Recorded Programs
+Strength
+Nutrition
+Physiotherapy
+Recorded Physiotherapy
+Doctor Consultation
+Hormonal Wellness
+Men's Sexual Wellness
+Women's Wellness
+Professionals
+Batches
+Schedule
+Pricing
+Testimonials
+Success Stories
+Blog
+Videos
+FAQ
+Contact
+Login
+Signup
+Checkout
+Confirmation
+Privacy
+Terms
+Medical Disclaimer
+
+==================================================
+HOMEPAGE
+==================================================
+
+Build a cinematic homepage.
+
+Hero:
+Doctor image/video
+Large headline
+Primary CTA
+Secondary CTA
+
+Then:
+
+"Not sure where to start?"
+
+Introduce:
+
+"Take our 3-minute health assessment."
+
+Show:
+3–5 minutes
+Private
+Personalized recommendations
+
+Then:
+
+"One platform. Your complete wellness journey."
+
+Show cards:
+
+Pilates
+Strength
+Nutrition
+Physiotherapy
+Doctor-led Care
+Hormonal Wellness
+Sexual Wellness
+Healthy Ageing
+
+Then:
+
+"Led by a doctor. Built around you."
+
+Show doctor profile, credentials, philosophy and video.
+
+Then:
+
+Discover
+Understand
+Personalize
+Transform
+
+Then programs.
+
+Then testimonials.
+
+Then educational content.
+
+Then final CTA.
+
+==================================================
+HEALTH ASSESSMENT
+==================================================
+
+This is one of the MOST IMPORTANT parts of the product.
+
+Make it feel like a premium interactive assessment, inspired by the screenshots I provided from Traya and FITTR.
+
+Do NOT make it look like a long form.
+
+Use:
+
+Previous
+Progress bar
+Percentage
+Exit
+
+One primary question per screen.
+
+Large touch-friendly answers.
+
+Smooth transitions.
+
+Visual answer cards.
+
+==================================================
+ASSESSMENT SECTIONS
+==================================================
+
+SECTION 1:
+ABOUT YOU
+
+Collect:
+
+Name
+Phone
+Age
+Gender
+Height
+Weight
+Optional waist circumference
+Activity level
+
+Activity:
+Mostly sitting
+Lightly active
+Moderately active
+Very active
+
+SECTION 2:
+GOALS
+
+"What would you most like to improve?"
+
+Multi-select:
+
+Lose weight
+Build muscle & strength
+Improve flexibility & mobility
+Improve posture
+Improve energy
+Sleep better
+Improve nutrition
+Improve hormonal wellness
+Improve sexual wellness
+Reduce pain
+Stay fit after 40
+I'm not sure
+
+Then ask:
+
+"What's your #1 priority?"
+
+SECTION 3:
+MOVEMENT
+
+Fitness level
+Movement comfort
+Pain/discomfort
+Pain location
+Impact on daily life
+
+SECTION 4:
+PILATES
+
+Have you done Pilates before?
+
+What would you like Pilates to help with?
+
+Preferred:
+Group
+Individual
+Recorded
+Not sure
+
+SECTION 5:
+INTERNAL HEALTH
+
+Energy
+Sleep
+Weight change
+Eating habits
+Stress
+Weekly available time
+
+SECTION 6:
+HORMONAL WELLNESS
+
+Ask discreetly:
+
+Would you like to explore hormonal wellness?
+
+If yes:
+Energy
+Strength
+Body composition
+Mood
+Sleep
+Sexual wellbeing
+Other
+Not sure
+
+Do NOT diagnose.
+
+SECTION 7:
+SEXUAL WELLNESS
+
+Show privacy reassurance.
+
+Allow user to skip.
+
+Use appropriate gender-specific flows.
+
+Do NOT present assessment answers as diagnosis.
+
+SECTION 8:
+NUTRITION
+
+Eating habits
+Goals
+Exercise frequency
+
+SECTION 9:
+SERVICE PREFERENCE
+
+Group Pilates
+Individual Pilates
+Recorded
+Strength
+Nutrition
+Physiotherapy
+Doctor
+Hormonal wellness
+Open to combination
+
+Online
+Studio
+Combination
+
+Start:
+ASAP
+Within 2 weeks
+This month
+Exploring
+
+==================================================
+ADAPTIVE LOGIC
+==================================================
+
+Do NOT ask every question to every person.
+
+Make the assessment adaptive.
+
+If pain = yes:
+show pain questions.
+
+If Pilates selected:
+show Pilates questions.
+
+If nutrition selected:
+show nutrition questions.
+
+If hormonal wellness selected:
+show hormonal questions.
+
+If sexual wellness selected:
+show private sexual wellness flow.
+
+If "I'm not sure":
+show broader discovery questions.
+
+The assessment should feel intelligent and short.
+
+==================================================
+PROCESSING
+==================================================
+
+Create an animated processing screen.
+
+Headline:
+
+"Building your personalised wellness plan..."
+
+Animated steps:
+
+✓ Reviewing your goals
+✓ Understanding your lifestyle
+✓ Mapping your fitness needs
+✓ Matching you with the right experts
+✓ Building your recommendations
+
+Then reveal results.
+
+==================================================
+RESULTS
+==================================================
+
+Headline:
+
+"Your personalised 40+ wellness plan"
+
+"Hi [Name], here's where we'd recommend starting."
+
+Show priority areas.
+
+Example:
+
+Movement & Mobility
+High priority
+
+Strength
+High priority
+
+Nutrition
+Recommended
+
+Medical Wellness
+Consider a consultation
+
+Create premium recommendation cards.
+
+Each card should show:
+
+Program
+Priority
+Why recommended
+Professional
+Group/Individual/Recorded
+Price
+Add button
+
+Use language such as:
+
+Recommended
+Consider
+Based on your answers
+May benefit from
+
+Never say:
+
+"You have..."
+"You are diagnosed with..."
+"This will cure..."
+"Guaranteed result..."
+
+==================================================
+BUILD YOUR PLAN
+==================================================
+
+Allow users to individually select services.
+
+Example:
+
+✓ Group Pilates
+✓ Nutrition
+☐ Physiotherapy
+☐ Doctor consultation
+☐ Strength training
+
+Show live total.
+
+Support both:
+
+Individual services
+Bundles/packages
+
+CTA:
+
+Continue to Checkout
+
+==================================================
+PILATES
+==================================================
+
+Create program page.
+
+Show:
+
+Overview
+Benefits
+Coach
+Schedule
+Group
+Individual
+Recorded
+Price
+Duration
+Level
+Language
+Availability
+
+Group:
+
+Batch
+Days
+Time
+Capacity
+Seats remaining
+Zoom
+Price
+
+Individual:
+
+Coach
+Calendar
+Time slots
+Price
+
+Recorded:
+
+Video library
+Duration
+Level
+Language
+
+==================================================
+PWA
+==================================================
+
+Build a complete mobile-first PWA.
+
+Bottom nav:
+
+Home
+Programs
+Sessions
+Progress
+Profile
+
+Dashboard:
+
+Good morning [Name]
+
+Next session
+Upcoming appointment
+Progress
+Recommended content
+Health habits
+Messages
+
+Session:
+
+Title
+Trainer
+Date
+Time
+Countdown
+Join Zoom
+Attendance
+Notes
+Reschedule
+Cancel
+
+Progress:
+
+Sessions completed
+Attendance
+Consistency
+Mobility
+Strength
+Weight trend
+Habit completion
+Program progress
+
+==================================================
+ADMIN DASHBOARD
+==================================================
+
+THIS IS MANDATORY.
+
+Design a full professional admin dashboard.
+
+Do NOT make a simple generic admin template.
+
+Sidebar:
+
+Dashboard
+Leads
+Users
+Assessments
+Recommendations
+Programs
+Services
+Packages
+Pilates Batches
+Sessions
+Bookings
+Professionals
+Zoom
+Physiotherapy Library
+Nutrition
+Doctors
+Payments
+Subscriptions
+WhatsApp
+Content
+Blog
+Videos
+Testimonials
+Meta Leads
+Analytics
+Translations
+Settings
+
+==================================================
+ADMIN OVERVIEW
+==================================================
+
+Cards:
+
+Total Users
+New Leads
+Assessment Completions
+Conversions
+Revenue
+Upcoming Sessions
+Active Programs
+WhatsApp Leads
+
+Charts:
+
+Leads
+Assessment completion
+Conversion funnel
+Revenue
+Popular services
+Popular programs
+Professionals
+Group vs Individual
+English vs Marathi
+
+Recent activity.
+
+==================================================
+ADMIN USERS
+==================================================
+
+Table:
+
+Name
+Phone
+Email
+Age
+Gender
+Language
+Assessment
+Program
+Subscription
+Last Activity
+Payment
+
+Actions:
+
+View
+Edit
+Assign program
+Assign professional
+Send WhatsApp
+View assessment
+View bookings
+View payments
+
+==================================================
+ADMIN ASSESSMENT
+==================================================
+
+Show:
+
+Assessment submissions
+Answers
+Priority areas
+Recommendations
+Lead status
+Conversion status
+
+Allow:
+
+View
+Edit recommendation
+Override recommendation
+Assign professional
+Contact user
+
+==================================================
+ADMIN RECOMMENDATION ENGINE
+==================================================
+
+Create a visual rules builder.
+
+Example:
+
+IF
+Age > 40
+AND
+Goal = Mobility
+AND
+Pain = Yes
+
+THEN
+
+Recommend Physiotherapy
+Recommend Individual Pilates
+Priority = High
+
+Support:
+
+AND
+OR
+Priority
+Weight
+Active/inactive
+Explanation
+Service mapping
+Language-specific explanation
+
+==================================================
+ADMIN PROGRAM CMS
+==================================================
+
+Create/Edit/Duplicate/Archive/Publish.
+
+Fields:
+
+Program Name EN
+Program Name MR
+Description EN
+Description MR
+Category
+Professional
+Session type
+Duration
+Level
+Price
+Discount
+Image
+Video
+Capacity
+Status
+
+==================================================
+ADMIN BATCH CMS
+==================================================
+
+Batch Name EN
+Batch Name MR
+Coach
+Days
+Time
+Start date
+End date
+Capacity
+Seats
+Zoom link
+Price
+Language
+Level
+Status
+
+==================================================
+ADMIN PROFESSIONALS
+==================================================
+
+Professionals:
+
+Doctor
+MD Medicine
+Endocrinology specialist if applicable
+Pilates Coach
+Physiotherapist
+Nutritionist
+Strength Trainer
+
+Fields:
+
+Name EN
+Name MR
+Role EN
+Role MR
+Bio EN
+Bio MR
+Qualifications EN
+Qualifications MR
+Photo
+Availability
+Specializations
+Services
+Languages
+Booking enabled
+
+==================================================
+ADMIN CONTENT CMS
+==================================================
+
+Editable:
+
+Homepage
+Hero
+Doctor section
+Programs
+Services
+FAQs
+Testimonials
+Blogs
+Videos
+Banners
+CTAs
+
+Nothing should require editing source code.
+
+==================================================
+ADMIN BILINGUAL CMS
+==================================================
+
+This is NON-NEGOTIABLE.
+
+Create a dedicated:
+
+TRANSLATIONS
+
+section.
+
+Every content entity must support:
+
+English
+Marathi
+
+Example:
+
+title_en
+title_mr
+
+description_en
+description_mr
+
+cta_en
+cta_mr
+
+The admin can:
+
+Search
+Edit English
+Edit Marathi
+See missing translations
+Save draft
+Publish
+Bulk edit
+
+Show a "Missing Marathi translation" indicator.
+
+The public website must immediately reflect published CMS content.
+
+==================================================
+ADMIN ASSESSMENT CMS
+==================================================
+
+Admin can:
+
+Add
+Edit
+Delete
+Reorder
+Enable/Disable
+Duplicate
+
+Question fields:
+
+Question EN
+Question MR
+Answer EN
+Answer MR
+Question type
+Section
+Required
+Condition
+Recommendation weight
+Active
+
+Question types:
+
+Single choice
+Multiple choice
+Text
+Number
+Slider
+Yes/No
+Date
+Height
+Weight
+
+==================================================
+PAYMENTS
+==================================================
+
+Admin payment table:
+
+Successful
+Failed
+Pending
+Refunded
+
+Show:
+
+Amount
+User
+Program
+Payment gateway
+Date
+Status
+Transaction ID
+
+==================================================
+WHATSAPP
+==================================================
+
+Create WhatsApp CRM interface.
+
+Templates:
+
+Welcome
+Assessment completed
+Assessment result
+Booking confirmed
+Payment confirmed
+Session reminder
+Missed session
+Renewal
+Follow-up
+
+Each:
+
+English
+Marathi
+
+Status:
+
+Draft
+Approved
+Active
+Inactive
+
+==================================================
+META ADS
+==================================================
+
+Create Meta campaign lead dashboard.
+
+Show:
+
+Campaign
+Ad set
+Ad
+Lead
+Name
+Phone
+Age
+Goal
+Language
+Assessment
+Conversion
+Source
+
+Funnel:
+
+Ad impression
+→ Lead
+→ Assessment
+→ Consultation
+→ Purchase
+→ Active user
+
+==================================================
+ANALYTICS
+==================================================
+
+Create:
+
+Traffic
+Leads
+Assessment starts
+Assessment completion
+Abandonment
+Recommendations
+Conversions
+Revenue
+Popular programs
+Popular professionals
+Group vs Individual
+Online vs Studio
+English vs Marathi
+Meta source
+WhatsApp source
+
+==================================================
+ROLES
+==================================================
+
+Create role/permission UI.
+
+Roles:
+
+Super Admin
+Doctor
+Manager
+Coach
+Physiotherapist
+Nutritionist
+Support
+Content Manager
+
+==================================================
+COMPONENT SYSTEM
+==================================================
+
+Create a proper Figma design system.
+
+Components:
+
+Buttons
+Inputs
+Radio cards
+Checkbox cards
+Progress
+Assessment cards
+Program cards
+Professional cards
+Pricing cards
+Session cards
+Batch cards
+Video cards
+Navigation
+Footer
+Mobile bottom nav
+Modal
+Drawer
+Toast
+Alert
+Badge
+Tabs
+Accordion
+Calendar
+Time picker
+Data tables
+Charts
+Stat cards
+Admin sidebar
+Admin header
+Language toggle
+Empty states
+Loading states
+Error states
+Success states
+
+Create variants:
+
+Default
+Hover
+Pressed
+Disabled
+Loading
+Selected
+Error
+Success
+
+==================================================
+STATES
+==================================================
+
+Every important screen must have:
+
+Loading
+Empty
+Error
+Success
+Disabled
+Selected
+No results
+Network/offline where relevant
+
+==================================================
+PROTOTYPES
+==================================================
+
+Create clickable flows:
+
+1.
+Homepage
+→ Assessment
+→ Questions
+→ Processing
+→ Results
+→ Build Plan
+→ Checkout
+
+2.
+Homepage
+→ Pilates
+→ Group
+→ Batch
+→ Payment
+→ Confirmation
+
+3.
+Homepage
+→ Pilates
+→ Individual
+→ Coach
+→ Calendar
+→ Payment
+
+4.
+Assessment
+→ Hormonal Wellness
+→ Doctor Consultation
+→ Booking
+
+5.
+Login
+→ PWA
+→ Dashboard
+→ Session
+→ Zoom
+
+6.
+Admin
+→ Dashboard
+→ Users
+→ Assessment
+→ Recommendation
+→ Assign Program
+
+7.
+Admin
+→ Programs
+→ Edit English
+→ Edit Marathi
+→ Publish
+
+8.
+Admin
+→ Assessment
+→ Add Question
+→ Conditional Logic
+→ Recommendation Mapping
+
+==================================================
+FIGMA FILE ORGANIZATION
+==================================================
+
+Create these Figma pages:
+
+01 — Cover / Brand Direction
+02 — Design System
+03 — Components
+04 — Marketing Desktop
+05 — Marketing Mobile
+06 — Assessment UX
+07 — Assessment Results
+08 — Checkout & Booking
+09 — PWA Mobile
+10 — PWA Desktop
+11 — Admin Dashboard
+12 — Admin CMS
+13 — Admin Assessment Engine
+14 — Admin Translations
+15 — Admin Analytics
+16 — Prototypes / User Flows
+17 — Responsive States
+18 — Empty / Loading / Error States
+
+Use clean layer names.
+
+Use Auto Layout.
+
+Use components.
+
+Use variables.
+
+Use reusable styles.
+
+==================================================
+FINAL QUALITY BAR
+==================================================
+
+Treat this as a real production product for a premium healthcare startup.
+
+Do not deliver a basic template.
+
+Do not stop after the homepage.
+
+Do not ignore admin.
+
+Do not ignore Marathi.
+
+Do not hardcode business content.
+
+Do not make the assessment generic.
+
+Do not make Pilates the answer for everyone.
+
+Do not make medical diagnoses through the assessment.
+
+Do not use fake medical claims.
+
+Do not make mobile an afterthought.
+
+Do not create disconnected desktop/mobile designs.
+
+Everything must work as one coherent design system.
+
+The final product should feel:
+
+"Doctor-led.
+Personalized.
+Premium.
+Modern.
+Human.
+Built for life after 40."
+
+The complete journey is:
+
+DISCOVER
+→ ASSESS
+→ UNDERSTAND
+→ PERSONALIZE
+→ CHOOSE
+→ PAY
+→ TRAIN
+→ TRACK
+→ IMPROVE
+
+The business journey is:
+
+ACQUIRE
+→ LEAD
+→ ASSESS
+→ RECOMMEND
+→ CONVERT
+→ SCHEDULE
+→ COMMUNICATE
+→ TRACK
+→ RETAIN
+
+Build the complete Figma product accordingly.

@@ -1,0 +1,10 @@
+{
+  "description": "Simplify task management by quickly organizing and tracking your to-dos in one intuitive platform designed for efficient productivity.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
