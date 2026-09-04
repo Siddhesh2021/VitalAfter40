@@ -2,22 +2,34 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { programs, professionals, testimonials, t, type Lang } from "./data";
 import AssessmentFlow from "./Assessment";
 import CheckoutFlow from "./Checkout";
+import type { OrderData } from "./Checkout";
 import PWADashboard from "./PWA";
 import AdminDashboard from "./Admin";
+import DesignSystem from "./DesignSystem";
+import HomePageNew from "./Home";
+import ResultsPage from "./Results";
+import ProgramsPageNew from "./Programs";
+import BookingFlow from "./Booking";
+import SuccessPage from "./Success";
 
-type Page = "home" | "assessment" | "programs" | "professionals" | "checkout" | "pwa" | "login" | "admin";
+type Page = "home" | "assessment" | "results" | "programs" | "booking" | "professionals" | "checkout" | "success" | "pwa" | "login" | "admin" | "design-system";
+type Answers = Record<string, string | string[]>;
 
 // ─── Scroll reveal hook ────────────────────────────────────────────────
 function useScrollReveal() {
   useEffect(() => {
-    const els = document.querySelectorAll("[data-reveal]");
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach(e => { if (e.isIntersecting) { (e.target as HTMLElement).classList.add("revealed"); } }),
-      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
-    );
-    els.forEach(el => io.observe(el));
+    const observe = () => {
+      const els = document.querySelectorAll("[data-reveal]:not(.revealed)");
+      const io = new IntersectionObserver(
+        (entries) => entries.forEach(e => { if (e.isIntersecting) { (e.target as HTMLElement).classList.add("revealed"); io.unobserve(e.target); } }),
+        { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+      );
+      els.forEach(el => io.observe(el));
+      return io;
+    };
+    const io = observe();
     return () => io.disconnect();
-  });
+  }, []);
 }
 
 // ─── Language toggle ───────────────────────────────────────────────────
@@ -37,10 +49,11 @@ function Nav({ page, setPage, lang, setLang }: { page: Page; setPage: (p: Page) 
   const isHero = page === "home";
 
   useEffect(() => {
+    setScrolled(window.scrollY > 60);
     const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [page]);
 
   const navBg = isHero && !scrolled
     ? "bg-transparent"
@@ -59,7 +72,7 @@ function Nav({ page, setPage, lang, setLang }: { page: Page; setPage: (p: Page) 
         </button>
 
         {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-7">
+        <div className="hidden lg:flex items-center gap-5 xl:gap-7">
           {[
             { label_en: "Programs", label_mr: "प्रोग्राम्स", page: "programs" as Page },
             { label_en: "Our Team", label_mr: "आमची टीम", page: "professionals" as Page },
@@ -79,7 +92,7 @@ function Nav({ page, setPage, lang, setLang }: { page: Page; setPage: (p: Page) 
         </div>
 
         {/* Mobile */}
-        <div className="md:hidden flex items-center gap-3">
+        <div className="lg:hidden flex items-center gap-3">
           <LangToggle lang={lang} setLang={setLang} />
           <button onClick={() => setMenuOpen(!menuOpen)} className={`flex flex-col gap-1.5 p-1 ${textColor}`} aria-label="Menu">
             <span className={`block h-px w-5 bg-current transition-all ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
@@ -271,12 +284,12 @@ function HomePage({ setPage, lang }: { setPage: (p: Page) => void; lang: Lang })
             </h2>
             <div className="flex gap-6 mt-5">
               {[
-                { icon: "⏱", en: "3–5 min", mr: "३-५ मिनिटे" },
-                { icon: "🔒", en: "Private", mr: "खाजगी" },
-                { icon: "🎯", en: "Personalised", mr: "वैयक्तिकृत" },
+                { en: "3–5 min", mr: "३-५ मिनिटे" },
+                { en: "Private", mr: "खाजगी" },
+                { en: "Personalised", mr: "वैयक्तिकृत" },
               ].map(i => (
                 <div key={i.en} className="flex items-center gap-2">
-                  <span className="text-lg">{i.icon}</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-white/40 shrink-0"/>
                   <span className={`t-small text-white/70 ${lang === "mr" ? "mr" : ""}`}>{lang === "en" ? i.en : i.mr}</span>
                 </div>
               ))}
@@ -775,10 +788,48 @@ function LoginPage({ setPage, lang }: { setPage: (p: Page) => void; lang: Lang }
 }
 
 // ─── ROOT ──────────────────────────────────────────────────────────────
+// ─── Page transition wrapper ───────────────────────────────────────────
+function PageShell({ pageKey, children }: { pageKey: string; children: React.ReactNode }) {
+  const [animKey, setAnimKey] = useState(pageKey);
+  const [visible, setVisible] = useState(true);
+  const prevKey = useRef(pageKey);
+
+  useEffect(() => {
+    if (pageKey !== prevKey.current) {
+      setVisible(false);
+      const t = setTimeout(() => {
+        prevKey.current = pageKey;
+        setAnimKey(pageKey);
+        setVisible(true);
+      }, 180);
+      return () => clearTimeout(t);
+    }
+  }, [pageKey]);
+
+  return (
+    <div
+      key={animKey}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "none" : "translateY(6px)",
+        transition: visible
+          ? "opacity 0.42s cubic-bezier(0.16,1,0.3,1), transform 0.42s cubic-bezier(0.16,1,0.3,1)"
+          : "opacity 0.18s ease, transform 0.18s ease",
+        willChange: "opacity, transform",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default function App() {
   const [page, setPage] = useState<Page>("home");
   const [lang, setLang] = useState<Lang>("en");
   const [cart, setCart] = useState<string[]>([]);
+  const [assessmentAnswers, setAssessmentAnswers] = useState<Answers>({});
+  const [bookingProgramId, setBookingProgramId] = useState("pilates-group");
+  const [orderData, setOrderData] = useState<OrderData | null>(null);
   const prevPage = useRef<Page>("home");
 
   const navigate = useCallback((p: Page) => {
@@ -787,51 +838,87 @@ export default function App() {
     if (p !== "admin" && p !== "pwa") window.scrollTo({ top: 0, behavior: "instant" });
   }, [page]);
 
-  const isFullscreen = page === "admin" || page === "pwa";
+  const isFullscreen = page === "admin" || page === "pwa" || page === "design-system" || page === "assessment" || page === "results" || page === "booking" || page === "success";
 
   return (
     <div style={{ fontFamily: "var(--font-body)" }}>
       {!isFullscreen && <Nav page={page} setPage={navigate} lang={lang} setLang={setLang} />}
 
-      {page === "home" && <HomePage setPage={navigate} lang={lang} />}
-      {page === "programs" && <ProgramsPage setPage={navigate} lang={lang} />}
-      {page === "professionals" && <ProfessionalsPage setPage={navigate} lang={lang} />}
-      {page === "login" && <LoginPage setPage={navigate} lang={lang} />}
-
-      {page === "assessment" && (
-        <AssessmentFlow
-          lang={lang}
-          setLang={setLang}
-          onBack={() => navigate("home")}
-          onComplete={(selectedCart) => { setCart(selectedCart); navigate("checkout"); }}
-        />
-      )}
-
-      {page === "checkout" && (
-        <CheckoutFlow
-          lang={lang}
-          setLang={setLang}
-          cart={cart}
-          onBack={() => navigate("assessment")}
-          onHome={() => navigate("pwa")}
-        />
-      )}
-
-      {page === "pwa" && (
-        <PWADashboard
-          lang={lang}
-          setLang={setLang}
-          onBack={() => navigate("home")}
-        />
-      )}
-
-      {page === "admin" && (
-        <AdminDashboard
-          lang={lang}
-          setLang={setLang}
-          onBack={() => navigate("home")}
-        />
-      )}
+      <PageShell pageKey={page}>
+        {page === "home" && <HomePageNew setPage={navigate} lang={lang} setLang={setLang} />}
+        {page === "programs" && (
+          <ProgramsPageNew
+            lang={lang}
+            onBook={(programId) => { setBookingProgramId(programId); navigate("booking"); }}
+            onAssessment={() => navigate("assessment")}
+            onBack={() => navigate("home")}
+          />
+        )}
+        {page === "booking" && (
+          <BookingFlow
+            lang={lang}
+            programId={bookingProgramId}
+            onConfirm={(ids) => { setCart(ids); navigate("checkout"); }}
+            onBack={() => navigate("programs")}
+          />
+        )}
+        {page === "professionals" && <ProfessionalsPage setPage={navigate} lang={lang} />}
+        {page === "login" && <LoginPage setPage={navigate} lang={lang} />}
+        {page === "assessment" && (
+          <AssessmentFlow
+            lang={lang}
+            setLang={setLang}
+            onBack={() => navigate("home")}
+            onComplete={(selectedCart, answers) => {
+              setCart(selectedCart);
+              if (answers) setAssessmentAnswers(answers);
+              navigate("results");
+            }}
+          />
+        )}
+        {page === "results" && (
+          <ResultsPage
+            lang={lang}
+            answers={assessmentAnswers}
+            onBuild={(plan) => {
+              setCart(plan.map(p => p.programId));
+              navigate("checkout");
+            }}
+            onBack={() => navigate("assessment")}
+          />
+        )}
+        {page === "checkout" && (
+          <CheckoutFlow
+            lang={lang}
+            setLang={setLang}
+            cart={cart}
+            onBack={() => navigate(prevPage.current === "booking" ? "booking" : "results")}
+            onSuccess={(data) => { setOrderData(data); navigate("success"); }}
+          />
+        )}
+        {page === "success" && orderData && (
+          <SuccessPage
+            lang={lang}
+            order={orderData}
+            onDashboard={() => navigate("pwa")}
+          />
+        )}
+        {page === "pwa" && (
+          <PWADashboard
+            lang={lang}
+            setLang={setLang}
+            onBack={() => navigate("home")}
+          />
+        )}
+        {page === "admin" && (
+          <AdminDashboard
+            lang={lang}
+            setLang={setLang}
+            onBack={() => navigate("home")}
+          />
+        )}
+        {page === "design-system" && <DesignSystem />}
+      </PageShell>
     </div>
   );
 }

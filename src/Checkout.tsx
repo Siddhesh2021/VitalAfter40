@@ -1,26 +1,51 @@
 import { useState } from "react";
-import { Lang, t, programs } from "./data";
+import { programs, professionals, t, type Lang } from "./data";
 
 interface Props {
   lang: Lang;
   setLang: (l: Lang) => void;
   cart: string[];
   onBack: () => void;
-  onHome: () => void;
+  onSuccess: (orderData: OrderData) => void;
 }
 
-type Step = "details" | "payment" | "confirmation";
+export interface OrderData {
+  items: typeof programs;
+  total: number;
+  name: string;
+  phone: string;
+  email: string;
+}
+
+type Step = "plan" | "payment" | "processing";
 type PayMethod = "upi" | "card" | "netbanking";
 
-export default function CheckoutFlow({ lang, setLang, cart, onBack, onHome }: Props) {
-  const [step, setStep] = useState<Step>("details");
-  const [form, setForm] = useState({ name: "", email: "", phone: "", pincode: "" });
+const NETBANKING_BANKS = ["SBI", "HDFC", "ICICI", "Axis", "Kotak", "Yes Bank", "PNB"];
+
+function validate(form: Record<string, string>) {
+  const errs: Record<string, string> = {};
+  if (!form.name.trim()) errs.name = "Name is required";
+  if (!/^\d{10}$/.test(form.phone.replace(/\s/g, ""))) errs.phone = "Enter a valid 10-digit number";
+  if (!form.email.includes("@")) errs.email = "Enter a valid email";
+  return errs;
+}
+
+export default function CheckoutFlow({ lang, cart, onBack, onSuccess }: Props) {
+  const [step, setStep] = useState<Step>("plan");
+  const [form, setForm] = useState({ name: "", phone: "", email: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [payMethod, setPayMethod] = useState<PayMethod>("upi");
   const [upiId, setUpiId] = useState("");
+  const [cardNum, setCardNum] = useState("");
+  const [cardExp, setCardExp] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [selectedBank, setSelectedBank] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [processingStep, setProcessingStep] = useState(0);
 
-  const cartItems = (cart.length > 0 ? cart : ["pilates-group", "nutrition"])
+  const cartItems = (cart.length > 0 ? cart : ["pilates-group"])
     .map(id => programs.find(p => p.id === id))
     .filter(Boolean) as typeof programs;
 
@@ -28,302 +53,398 @@ export default function CheckoutFlow({ lang, setLang, cart, onBack, onHome }: Pr
   const gst = Math.round(subtotal * 0.18);
   const total = subtotal + gst;
 
-  const validate = () => {
-    const errs: Record<string, string> = {};
-    if (!form.name.trim()) errs.name = t("Required", "आवश्यक", lang);
-    if (!form.email.trim() || !form.email.includes("@")) errs.email = t("Valid email required", "वैध ईमेल आवश्यक", lang);
-    if (!form.phone.trim() || form.phone.length < 10) errs.phone = t("Valid phone required", "वैध फोन आवश्यक", lang);
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
+  const setField = (k: string, v: string) => {
+    setForm(f => ({ ...f, [k]: v }));
+    if (errors[k]) setErrors(e => ({ ...e, [k]: "" }));
+  };
+
+  const handleProceedToPayment = () => {
+    const errs = validate(form);
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    setStep("payment");
   };
 
   const handlePay = () => {
+    if (!agreeTerms) return;
     setProcessing(true);
-    setTimeout(() => { setProcessing(false); setStep("confirmation"); }, 2200);
+    setStep("processing");
+    let s = 0;
+    const iv = setInterval(() => {
+      s++;
+      setProcessingStep(s);
+      if (s >= 3) {
+        clearInterval(iv);
+        setTimeout(() => {
+          onSuccess({ items: cartItems, total, name: form.name, phone: form.phone, email: form.email });
+        }, 600);
+      }
+    }, 900);
   };
 
-  if (step === "confirmation") return <Confirmation lang={lang} cartItems={cartItems} total={total} onHome={onHome} name={form.name} />;
+  const canPay = agreeTerms && (
+    (payMethod === "upi" && upiId.includes("@")) ||
+    (payMethod === "card" && cardNum.replace(/\s/g, "").length === 16 && cardExp && cardCvv.length >= 3 && cardName) ||
+    (payMethod === "netbanking" && selectedBank)
+  );
 
-  const stepNum = step === "details" ? 1 : 2;
+  // ── Processing overlay ──
+  if (step === "processing") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: "var(--ink)" }}>
+        <div className="relative mb-10" style={{ width: 100, height: 100 }}>
+          <svg width="100" height="100" viewBox="0 0 100 100" className="ring-progress absolute inset-0">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
+            <circle cx="50" cy="50" r="42" fill="none" stroke="var(--sage)" strokeWidth="3"
+              strokeDasharray={`${(processingStep / 3) * 264} 264`} strokeLinecap="round"
+              style={{ transition: "stroke-dasharray 0.8s var(--ease-out-expo)" }} />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-[var(--sage)] flex items-center justify-center">
+              <span className="text-white text-base font-bold" style={{ fontFamily: "var(--font-display)" }}>V</span>
+            </div>
+          </div>
+        </div>
+        <h2 className="text-white mb-2" style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", letterSpacing: "-0.02em" }}>
+          {t("Confirming your payment…", "तुमचे पेमेंट पुष्टी करत आहे…", lang)}
+        </h2>
+        <p className="text-white/40 t-small">{t("Please don't close this window.", "हे विंडो बंद करू नका.", lang)}</p>
+        <div className="mt-8 space-y-3">
+          {[
+            t("Verifying payment", "पेमेंट सत्यापित करत आहे", lang),
+            t("Securing your spot", "तुमची जागा सुरक्षित करत आहे", lang),
+            t("Sending confirmation", "पुष्टीकरण पाठवत आहे", lang),
+          ].map((s, i) => (
+            <div key={s} className="flex items-center gap-3 transition-all" style={{ opacity: i <= processingStep - 1 ? 1 : 0.25 }}>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center ${i < processingStep ? "bg-[var(--sage)]" : "border border-white/20"}`}>
+                {i < processingStep && (
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="white" strokeWidth="2">
+                    <path d="M2 5l2.5 2.5 3.5-4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </div>
+              <span className="t-xs text-white/60">{s}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[var(--cream)]" style={{ fontFamily: "var(--font-body)" }}>
+    <div style={{ background: "var(--bg-primary)", minHeight: "100vh", fontFamily: "var(--font-body)" }}>
       {/* Header */}
-      <div className="bg-white border-b border-[var(--ink-10)] px-5 sm:px-8 py-4 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto flex items-center gap-4">
-          <button onClick={onBack} className="flex items-center gap-1.5 text-[var(--ink-40)] hover:text-[var(--ink-80)] transition-colors text-sm shrink-0">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 12L6 8l4-4" strokeLinecap="round"/></svg>
-            {t("Back", "मागे", lang)}
-          </button>
+      <div className="sticky top-0 z-30 px-6 py-4 flex items-center gap-4"
+        style={{ background: "var(--bg-primary)", borderBottom: "1px solid var(--border-subtle)" }}>
+        <button onClick={step === "payment" ? () => setStep("plan") : onBack}
+          className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[var(--bg-muted)] transition-colors">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--text-muted)" strokeWidth="1.5">
+            <path d="M10 3L5 8l5 5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
 
-          {/* Step indicator */}
-          <div className="flex items-center gap-2 flex-1 justify-center">
-            {[
-              { n: 1, label_en: "Your details", label_mr: "तुमचे तपशील" },
-              { n: 2, label_en: "Payment", label_mr: "पेमेंट" },
-            ].map((s, i) => (
-              <div key={s.n} className="flex items-center gap-2">
-                <div className={`flex items-center gap-1.5 ${stepNum >= s.n ? "text-[var(--ink-80)]" : "text-[var(--ink-20)]"}`}>
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${stepNum > s.n ? "bg-[var(--sage)] text-white" : stepNum === s.n ? "bg-[var(--ink-80)] text-white" : "border border-[var(--ink-10)]"}`}>
-                    {stepNum > s.n ? (
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2"><path d="M2.5 6l2.5 2.5 4.5-4.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    ) : s.n}
-                  </span>
-                  <span className={`t-xs hidden sm:inline ${lang === "mr" ? "mr" : ""}`}>{lang === "en" ? s.label_en : s.label_mr}</span>
+        {/* Steps */}
+        <div className="flex items-center gap-2 flex-1">
+          {[{ id: "plan", en: "Review plan", mr: "योजना पुनरावलोकन" }, { id: "payment", en: "Payment", mr: "पेमेंट" }].map((s, i) => {
+            const isActive = step === s.id;
+            const isDone = step === "payment" && s.id === "plan";
+            return (
+              <div key={s.id} className="flex items-center gap-2">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center t-xs font-semibold transition-all ${isDone ? "bg-[var(--sage)] text-white" : isActive ? "bg-[var(--ink)] text-white" : "bg-[var(--bg-muted)] text-[var(--text-muted)]"}`}
+                  style={{ fontFamily: "var(--font-mono)" }}>
+                  {isDone ? (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="white" strokeWidth="2">
+                      <path d="M2 5l2.5 2.5 3.5-4" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ) : i + 1}
                 </div>
-                {i === 0 && <span className="w-8 h-px bg-[var(--ink-10)]" />}
+                <span className={`t-xs hidden sm:block ${isActive ? "text-[var(--text-primary)] font-medium" : "text-[var(--text-muted)]"} ${lang === "mr" ? "mr" : ""}`}>
+                  {lang === "en" ? s.en : s.mr}
+                </span>
+                {i === 0 && <div className="w-8 h-px" style={{ background: "var(--border-subtle)" }} />}
               </div>
-            ))}
-          </div>
+            );
+          })}
+        </div>
 
-          <span className="t-xs text-[var(--ink-40)] shrink-0">VitalAfter40</span>
+        <div className="w-7 h-7 rounded-full bg-[var(--sage)] flex items-center justify-center shrink-0">
+          <span className="text-white text-xs font-bold" style={{ fontFamily: "var(--font-display)" }}>V</span>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-5 sm:px-8 py-10 grid lg:grid-cols-5 gap-8">
-        {/* Form */}
-        <div className="lg:col-span-3 page-enter">
-          {step === "details" && (
-            <div>
-              <h2 className={`t-h2 text-[var(--ink-80)] mb-8 ${lang === "mr" ? "mr" : ""}`} style={{ fontFamily: "var(--font-display)" }}>
-                {t("Your details", "तुमचे तपशील", lang)}
-              </h2>
-              <div className="space-y-5">
-                {[
-                  { key: "name", label_en: "Full name", label_mr: "पूर्ण नाव", type: "text", placeholder: "Meera Joshi" },
-                  { key: "email", label_en: "Email address", label_mr: "ईमेल पत्ता", type: "email", placeholder: "meera@example.com" },
-                  { key: "phone", label_en: "Phone number", label_mr: "फोन नंबर", type: "tel", placeholder: "+91 98765 43210" },
-                ].map(f => (
-                  <div key={f.key}>
-                    <label className={`t-xs text-[var(--ink-60)] block mb-1.5 ${lang === "mr" ? "mr" : ""}`}>
-                      {lang === "en" ? f.label_en : f.label_mr}
-                    </label>
-                    <input
-                      type={f.type}
-                      placeholder={f.placeholder}
-                      value={(form as any)[f.key]}
-                      onChange={e => { setForm({ ...form, [f.key]: e.target.value }); setErrors({ ...errors, [f.key]: "" }); }}
-                      className={`field ${errors[f.key] ? "border-[var(--error)]" : ""}`}
-                    />
-                    {errors[f.key] && <p className="t-xs text-[var(--error)] mt-1">{errors[f.key]}</p>}
-                  </div>
-                ))}
-              </div>
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="lg:grid lg:grid-cols-[1fr_340px] gap-12 items-start">
 
-              <div className="mt-8">
-                <button onClick={() => { if (validate()) setStep("payment"); }} className="btn btn-lg btn-primary w-full justify-center">
-                  <span className={lang === "mr" ? "mr" : ""}>{t("Continue to payment →", "पेमेंटवर जा →", lang)}</span>
+          {/* ── Main column ── */}
+          <div>
+            {step === "plan" && (
+              <div>
+                <h2 className={`t-h2 text-[var(--text-primary)] mb-6 ${lang === "mr" ? "mr" : ""}`} style={{ fontFamily: "var(--font-display)" }}>
+                  {t("Review your plan", "तुमची योजना पुनरावलोकन करा", lang)}
+                </h2>
+
+                {/* Programs */}
+                <div className="space-y-3 mb-8">
+                  {cartItems.map(prog => {
+                    const expert = professionals.find(p => {
+                      if (prog.category === "pilates") return p.id === "priya-pilates";
+                      if (prog.category === "physio") return p.id === "amit-physio";
+                      if (prog.category === "nutrition") return p.id === "sneha-nutrition";
+                      return p.id === "dr-sharma";
+                    });
+
+                    return (
+                      <div key={prog.id} className="flex items-start gap-4 p-4 rounded-2xl border" style={{ borderColor: "var(--border-subtle)", background: "var(--bg-elevated)" }}>
+                        <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0" style={{ background: "var(--bg-muted)" }}>
+                          <img src={prog.image} alt={prog.title_en} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`t-small font-semibold text-[var(--text-primary)] mb-0.5 ${lang === "mr" ? "mr" : ""}`} style={{ fontFamily: "var(--font-display)" }}>
+                            {lang === "en" ? prog.title_en : prog.title_mr}
+                          </p>
+                          <p className={`t-xs text-[var(--text-muted)] mb-2 ${lang === "mr" ? "mr" : ""}`}>
+                            {lang === "en" ? prog.duration_en : prog.duration_mr} · {lang === "en" ? prog.level_en : prog.level_mr}
+                          </p>
+                          {expert && (
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 rounded-full overflow-hidden shrink-0">
+                                <img src={expert.image} alt={expert.name_en} className="w-full h-full object-cover" />
+                              </div>
+                              <span className="t-xs text-[var(--text-muted)]">{expert.name_en}</span>
+                            </div>
+                          )}
+                        </div>
+                        <p className="t-small font-semibold text-[var(--text-primary)] shrink-0" style={{ fontFamily: "var(--font-mono)" }}>
+                          ₹{prog.price.toLocaleString()}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Contact details form */}
+                <h3 className={`t-h4 text-[var(--text-primary)] mb-4 ${lang === "mr" ? "mr" : ""}`} style={{ fontFamily: "var(--font-display)" }}>
+                  {t("Your details", "तुमचे तपशील", lang)}
+                </h3>
+
+                <div className="space-y-4 mb-8">
+                  {[
+                    { key: "name", label_en: "Full name", label_mr: "पूर्ण नाव", type: "text", placeholder: "Meera Joshi" },
+                    { key: "phone", label_en: "Mobile number", label_mr: "मोबाइल नंबर", type: "tel", placeholder: "+91 98765 43210" },
+                    { key: "email", label_en: "Email", label_mr: "ईमेल", type: "email", placeholder: "meera@email.com" },
+                  ].map(f => (
+                    <div key={f.key}>
+                      <label className={`t-label text-[var(--text-muted)] block mb-1.5 ${lang === "mr" ? "mr" : ""}`}>
+                        {lang === "en" ? f.label_en : f.label_mr}
+                      </label>
+                      <input
+                        type={f.type}
+                        value={form[f.key as keyof typeof form]}
+                        onChange={e => setField(f.key, e.target.value)}
+                        placeholder={f.placeholder}
+                        className={`field ${errors[f.key] ? "field-error" : ""}`}
+                      />
+                      {errors[f.key] && <p className="t-xs text-[var(--error)] mt-1">{errors[f.key]}</p>}
+                    </div>
+                  ))}
+                </div>
+
+                <button onClick={handleProceedToPayment}
+                  className={`btn btn-primary btn-xl w-full justify-center ${lang === "mr" ? "mr" : ""}`}>
+                  {t("Proceed to Payment →", "पेमेंटकडे जा →", lang)}
                 </button>
               </div>
-            </div>
-          )}
+            )}
 
-          {step === "payment" && (
-            <div className="anim-fade-up">
-              <h2 className={`t-h2 text-[var(--ink-80)] mb-8 ${lang === "mr" ? "mr" : ""}`} style={{ fontFamily: "var(--font-display)" }}>
-                {t("Payment", "पेमेंट", lang)}
-              </h2>
+            {step === "payment" && (
+              <div>
+                <h2 className={`t-h2 text-[var(--text-primary)] mb-6 ${lang === "mr" ? "mr" : ""}`} style={{ fontFamily: "var(--font-display)" }}>
+                  {t("Complete payment", "पेमेंट पूर्ण करा", lang)}
+                </h2>
 
-              {/* Payment method tabs */}
-              <div className="flex gap-2 mb-6 p-1 bg-[var(--paper)] rounded-xl w-fit">
-                {([
-                  { id: "upi" as PayMethod, label: "UPI" },
-                  { id: "card" as PayMethod, label_en: "Card", label_mr: "कार्ड" },
-                  { id: "netbanking" as PayMethod, label_en: "Net Banking", label_mr: "नेट बँकिंग" },
-                ] as { id: PayMethod; label?: string; label_en?: string; label_mr?: string }[]).map(m => (
-                  <button key={m.id} onClick={() => setPayMethod(m.id)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${payMethod === m.id ? "bg-white shadow-sm text-[var(--ink-80)]" : "text-[var(--ink-40)] hover:text-[var(--ink-60)]"} ${lang === "mr" ? "mr" : ""}`}>
-                    {m.label ?? (lang === "en" ? m.label_en : m.label_mr)}
-                  </button>
-                ))}
-              </div>
-
-              {payMethod === "upi" && (
-                <div className="space-y-4">
-                  <div>
-                    <label className={`t-xs text-[var(--ink-60)] block mb-1.5 ${lang === "mr" ? "mr" : ""}`}>{t("UPI ID", "UPI आयडी", lang)}</label>
-                    <input className="field" placeholder="yourname@upi" value={upiId} onChange={e => setUpiId(e.target.value)} />
-                    <p className={`t-xs text-[var(--ink-40)] mt-1.5 ${lang === "mr" ? "mr" : ""}`}>{t("e.g. name@okaxis, name@paytm, name@ybl", "उदा. name@okaxis", lang)}</p>
-                  </div>
-                  <div className="bg-[var(--sage-ghost)] border border-[var(--sage-pale)] rounded-xl px-4 py-3 flex items-center gap-2.5">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--sage)" strokeWidth="1.5"><path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 4v2.5l1.5 1.5"/></svg>
-                    <p className={`t-xs text-[var(--sage)] ${lang === "mr" ? "mr" : ""}`}>{t("You'll receive a payment request on your UPI app.", "तुम्हाला तुमच्या UPI अॅपवर पेमेंट विनंती मिळेल.", lang)}</p>
-                  </div>
-                </div>
-              )}
-
-              {payMethod === "card" && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="t-xs text-[var(--ink-60)] block mb-1.5">{t("Card number", "कार्ड नंबर", lang)}</label>
-                    <input className="field" placeholder="1234 5678 9012 3456" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="t-xs text-[var(--ink-60)] block mb-1.5">{t("Expiry", "एक्सपायरी", lang)}</label>
-                      <input className="field" placeholder="MM / YY" />
-                    </div>
-                    <div>
-                      <label className="t-xs text-[var(--ink-60)] block mb-1.5">CVV</label>
-                      <input className="field" placeholder="•••" type="password" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="t-xs text-[var(--ink-60)] block mb-1.5">{t("Name on card", "कार्डवरील नाव", lang)}</label>
-                    <input className="field" placeholder="MEERA JOSHI" />
-                  </div>
-                </div>
-              )}
-
-              {payMethod === "netbanking" && (
-                <div className="grid grid-cols-2 gap-3">
-                  {["HDFC Bank", "SBI", "ICICI Bank", "Axis Bank", "Kotak", "Other"].map(bank => (
-                    <button key={bank} className="border border-[var(--ink-10)] rounded-xl p-3 text-sm text-left hover:border-[var(--sage-pale)] transition-colors">
-                      {bank}
+                {/* Payment method tabs */}
+                <div className="flex gap-2 mb-6 p-1 rounded-xl border" style={{ borderColor: "var(--border-subtle)", background: "var(--bg-muted)" }}>
+                  {(["upi", "card", "netbanking"] as const).map(m => (
+                    <button key={m} onClick={() => setPayMethod(m)}
+                      className={`flex-1 py-2.5 rounded-lg t-label transition-all capitalize ${payMethod === m ? "bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-sm" : "text-[var(--text-muted)]"} ${lang === "mr" ? "mr" : ""}`}>
+                      {m === "upi" ? "UPI" : m === "card" ? t("Card", "कार्ड", lang) : t("Netbanking", "नेटबँकिंग", lang)}
                     </button>
                   ))}
                 </div>
-              )}
 
-              {/* Security badge */}
-              <div className="mt-6 flex items-center gap-2.5 text-[var(--ink-40)]">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 2l5 2v4.5C13 11.5 10.5 14 8 15 5.5 14 3 11.5 3 8.5V4l5-2z"/></svg>
-                <p className={`t-xs ${lang === "mr" ? "mr" : ""}`}>{t("Secured by Razorpay · 256-bit SSL · PCI DSS compliant", "Razorpay द्वारे सुरक्षित · 256-bit SSL", lang)}</p>
-              </div>
-
-              <button onClick={handlePay} disabled={processing}
-                className={`btn btn-lg btn-primary w-full justify-center mt-8 ${processing ? "opacity-70 cursor-not-allowed" : ""}`}>
-                {processing ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="spin" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="white" strokeWidth="2"><path d="M9 2a7 7 0 100 14A7 7 0 009 2z" opacity="0.3"/><path d="M9 2a7 7 0 017 7" strokeLinecap="round"/></svg>
-                    {t("Processing…", "प्रक्रिया करत आहे…", lang)}
-                  </span>
-                ) : (
-                  <span className={lang === "mr" ? "mr" : ""}>{t(`Pay ₹${total.toLocaleString()} →`, `₹${total.toLocaleString()} द्या →`, lang)}</span>
+                {/* UPI */}
+                {payMethod === "upi" && (
+                  <div className="space-y-4 mb-6">
+                    <div className="flex items-center justify-center gap-6 mb-4">
+                      {["gpay", "phonepe", "paytm"].map(app => (
+                        <div key={app} className="flex flex-col items-center gap-1">
+                          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
+                            style={{ background: app === "gpay" ? "#1a73e8" : app === "phonepe" ? "#5f259f" : "#002970" }}>
+                            {app === "gpay" ? "G" : app === "phonepe" ? "Pe" : "P"}
+                          </div>
+                          <span className="t-xs text-[var(--text-muted)] capitalize">{app}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <label className={`t-label text-[var(--text-muted)] block mb-1.5 ${lang === "mr" ? "mr" : ""}`}>
+                      {t("UPI ID", "UPI आयडी", lang)}
+                    </label>
+                    <input type="text" value={upiId} onChange={e => setUpiId(e.target.value)}
+                      placeholder="name@upi" className="field" />
+                    <p className="t-xs text-[var(--text-muted)] flex items-center gap-1.5">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="var(--success)" strokeWidth="1.5"><path d="M6 1a4.5 4.5 0 100 9A4.5 4.5 0 006 1zM6 4.5v3M6 3h.01"/></svg>
+                      {t("You'll receive a payment request on your UPI app.", "तुम्हाला तुमच्या UPI अॅपवर पेमेंट विनंती मिळेल.", lang)}
+                    </p>
+                  </div>
                 )}
-              </button>
-            </div>
-          )}
-        </div>
 
-        {/* Order summary sidebar */}
-        <div className="lg:col-span-2">
-          <div className="bg-white border border-[var(--ink-10)] rounded-2xl p-6 sticky top-24">
-            <h3 className={`font-semibold text-[var(--ink-80)] mb-5 ${lang === "mr" ? "mr" : ""}`} style={{ fontFamily: "var(--font-display)", fontSize: "1.05rem" }}>
-              {t("Order summary", "ऑर्डर सारांश", lang)}
-            </h3>
+                {/* Card */}
+                {payMethod === "card" && (
+                  <div className="space-y-4 mb-6">
+                    <div>
+                      <label className="t-label text-[var(--text-muted)] block mb-1.5">{t("Card number", "कार्ड नंबर", lang)}</label>
+                      <input type="text" value={cardNum} maxLength={19}
+                        onChange={e => setCardNum(e.target.value.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim())}
+                        placeholder="1234 5678 9012 3456" className="field" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="t-label text-[var(--text-muted)] block mb-1.5">{t("Expiry", "समाप्ती", lang)}</label>
+                        <input type="text" value={cardExp} maxLength={5}
+                          onChange={e => { const v = e.target.value.replace(/\D/g,""); setCardExp(v.length > 2 ? `${v.slice(0,2)}/${v.slice(2)}` : v); }}
+                          placeholder="MM/YY" className="field" style={{ fontFamily: "var(--font-mono)" }} />
+                      </div>
+                      <div>
+                        <label className="t-label text-[var(--text-muted)] block mb-1.5">CVV</label>
+                        <input type="password" value={cardCvv} maxLength={4}
+                          onChange={e => setCardCvv(e.target.value.replace(/\D/g,""))}
+                          placeholder="•••" className="field" style={{ fontFamily: "var(--font-mono)" }} />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="t-label text-[var(--text-muted)] block mb-1.5">{t("Name on card", "कार्डवर नाव", lang)}</label>
+                      <input type="text" value={cardName} onChange={e => setCardName(e.target.value)}
+                        placeholder="MEERA JOSHI" className="field" style={{ textTransform: "uppercase" }} />
+                    </div>
+                    <div className="flex items-center gap-2 text-[var(--text-muted)]">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--success)" strokeWidth="1.5">
+                        <rect x="1" y="3" width="12" height="8" rx="1.5"/><path d="M1 6h12"/>
+                      </svg>
+                      <span className="t-xs">{t("256-bit SSL encrypted", "२५६-बिट SSL एनक्रिप्टेड", lang)}</span>
+                    </div>
+                  </div>
+                )}
 
-            <div className="space-y-4 mb-5">
-              {cartItems.map(p => (
-                <div key={p.id} className="flex items-start gap-3">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-[var(--paper)] shrink-0">
-                    <img src={p.image} alt={p.title_en} className="w-full h-full object-cover" />
+                {/* Netbanking */}
+                {payMethod === "netbanking" && (
+                  <div className="mb-6">
+                    <p className={`t-label text-[var(--text-muted)] mb-3 ${lang === "mr" ? "mr" : ""}`}>{t("Select bank", "बँक निवडा", lang)}</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                      {NETBANKING_BANKS.map(b => (
+                        <button key={b} onClick={() => setSelectedBank(b)}
+                          className={`py-3 rounded-xl border t-small font-medium transition-all ${selectedBank === b ? "border-[var(--sage)] bg-[var(--sage-ghost)] text-[var(--sage)]" : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--border-default)]"}`}>
+                          {b}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`t-small font-medium text-[var(--ink-80)] ${lang === "mr" ? "mr" : ""}`}>{lang === "en" ? p.title_en : p.title_mr}</p>
-                    <p className={`t-xs text-[var(--ink-40)] ${lang === "mr" ? "mr" : ""}`}>{lang === "en" ? p.duration_en : p.duration_mr}</p>
-                  </div>
-                  <p className="t-small font-semibold text-[var(--ink-80)] shrink-0" style={{ fontFamily: "var(--font-display)" }}>₹{p.price.toLocaleString()}</p>
+                )}
+
+                {/* Terms */}
+                <div className="flex items-start gap-3 mb-6 p-4 rounded-xl" style={{ background: "var(--bg-muted)" }}>
+                  <button onClick={() => setAgreeTerms(a => !a)}
+                    className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${agreeTerms ? "bg-[var(--sage)] border-[var(--sage)]" : "border-[var(--border-default)]"}`}
+                    style={{ borderRadius: 4 }}>
+                    {agreeTerms && (
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="white" strokeWidth="2">
+                        <path d="M2 5l2.5 2.5 3.5-4" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </button>
+                  <p className={`t-xs text-[var(--text-muted)] leading-relaxed ${lang === "mr" ? "mr" : ""}`}>
+                    {t("I agree to the ", "मी ", lang)}
+                    <span className="text-[var(--sage)] cursor-pointer hover:underline">{t("Terms of Service", "सेवा अटी", lang)}</span>
+                    {t(" and ", " आणि ", lang)}
+                    <span className="text-[var(--sage)] cursor-pointer hover:underline">{t("Privacy Policy", "गोपनीयता धोरण", lang)}</span>
+                    {t(". I understand that payments are secure and non-refundable after program commencement.", " याला सहमत आहे.", lang)}
+                  </p>
                 </div>
-              ))}
-            </div>
 
-            <div className="border-t border-[var(--ink-10)] pt-4 space-y-2">
-              <div className="flex justify-between text-sm text-[var(--ink-60)]">
-                <span className={lang === "mr" ? "mr" : ""}>{t("Subtotal", "उपएकूण", lang)}</span>
-                <span>₹{subtotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm text-[var(--ink-60)]">
-                <span>{t("GST (18%)", "GST (18%)", lang)}</span>
-                <span>₹{gst.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between font-semibold text-[var(--ink-80)] pt-2 border-t border-[var(--ink-10)]">
-                <span className={lang === "mr" ? "mr" : ""}>{t("Total", "एकूण", lang)}</span>
-                <span style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem" }}>₹{total.toLocaleString()}</span>
-              </div>
-            </div>
+                {/* Pay CTA */}
+                <button onClick={handlePay} disabled={!canPay}
+                  className={`btn btn-primary btn-xl w-full justify-center ${lang === "mr" ? "mr" : ""}`}>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.5">
+                    <rect x="1" y="4" width="14" height="9" rx="1.5"/><path d="M1 7h14"/>
+                  </svg>
+                  {t(`Complete Payment · ₹${total.toLocaleString()}`, `पेमेंट पूर्ण करा · ₹${total.toLocaleString()}`, lang)}
+                </button>
 
-            {/* Trust markers */}
-            <div className="mt-5 space-y-2">
-              {[
-                { icon: "✓", en: "Cancel anytime", mr: "कधीही रद्द करा" },
-                { icon: "✓", en: "WhatsApp support included", mr: "व्हॉट्सअॅप सपोर्ट समाविष्ट" },
-                { icon: "✓", en: "Start within 24 hrs", mr: "२४ तासांत सुरुवात" },
-              ].map(m => (
-                <p key={m.en} className={`t-xs text-[var(--ink-40)] flex items-center gap-2 ${lang === "mr" ? "mr" : ""}`}>
-                  <span className="text-[var(--sage)] font-bold">{m.icon}</span>
-                  {lang === "en" ? m.en : m.mr}
+                <p className={`t-xs text-center text-[var(--text-muted)] mt-3 ${lang === "mr" ? "mr" : ""}`}>
+                  {t("Secured by Razorpay · 256-bit SSL", "Razorpay द्वारे सुरक्षित · 256-bit SSL", lang)}
                 </p>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Confirmation ──────────────────────────────────────────────────────
-function Confirmation({ lang, cartItems, total, onHome, name }: { lang: Lang; cartItems: typeof programs; total: number; onHome: () => void; name: string }) {
-  return (
-    <div className="min-h-screen bg-[var(--cream)] flex items-center justify-center px-5 page-enter" style={{ fontFamily: "var(--font-body)" }}>
-      <div className="w-full max-w-md text-center py-12">
-        {/* Success ring */}
-        <div className="relative w-20 h-20 mx-auto mb-8">
-          <div className="w-20 h-20 rounded-full bg-[var(--sage)] flex items-center justify-center mx-auto">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="white" strokeWidth="2.5">
-              <path d="M7 16l5 5 13-13" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <div className="absolute inset-0 rounded-full bg-[var(--sage)] opacity-15" style={{ animation: "pulse-ring 2s ease-out infinite" }} />
-        </div>
-
-        <p className="t-label text-[var(--sage-mid)] mb-3">{t("Enrollment confirmed", "नोंदणी पुष्टी झाली", lang)}</p>
-        <h1 className={`t-h1 text-[var(--ink-80)] mb-3 ${lang === "mr" ? "mr" : ""}`} style={{ fontFamily: "var(--font-display)" }}>
-          {name ? t(`Welcome, ${name}!`, `स्वागत, ${name}!`, lang) : t("You're in!", "तुम्ही आत आहात!", lang)}
-        </h1>
-        <p className={`t-body text-[var(--ink-40)] mb-8 ${lang === "mr" ? "mr" : ""}`}>
-          {t("Your enrollment is confirmed. Welcome to VitalAfter40.", "तुमची नोंदणी पुष्टी झाली. VitalAfter40 मध्ये आपले स्वागत आहे.", lang)}
-        </p>
-
-        {/* Receipt */}
-        <div className="bg-white border border-[var(--ink-10)] rounded-2xl p-5 mb-6 text-left">
-          <p className={`font-semibold text-[var(--ink-80)] mb-4 ${lang === "mr" ? "mr" : ""}`} style={{ fontFamily: "var(--font-display)" }}>
-            {t("Your programs", "तुमचे प्रोग्राम्स", lang)}
-          </p>
-          {cartItems.map(p => (
-            <div key={p.id} className="flex items-center gap-3 py-2.5 border-b border-[var(--ink-10)] last:border-0">
-              <div className="w-8 h-8 rounded-lg overflow-hidden bg-[var(--paper)] shrink-0">
-                <img src={p.image} alt="" className="w-full h-full object-cover" />
               </div>
-              <span className={`t-small text-[var(--ink-60)] flex-1 ${lang === "mr" ? "mr" : ""}`}>{lang === "en" ? p.title_en : p.title_mr}</span>
-              <span className="t-small font-medium text-[var(--ink-80)]" style={{ fontFamily: "var(--font-display)" }}>₹{p.price.toLocaleString()}</span>
+            )}
+          </div>
+
+          {/* ── Order summary panel ── */}
+          <div className="lg:block">
+            <div className="sticky top-24 rounded-2xl border overflow-hidden" style={{ borderColor: "var(--border-subtle)", background: "var(--bg-elevated)" }}>
+              <div className="p-5 border-b" style={{ borderColor: "var(--border-subtle)" }}>
+                <p className={`t-label text-[var(--text-muted)] mb-1 ${lang === "mr" ? "mr" : ""}`}>{t("Order summary", "ऑर्डर सारांश", lang)}</p>
+                <p className="t-h4 text-[var(--text-primary)]" style={{ fontFamily: "var(--font-display)" }}>
+                  {cartItems.length} {t("program", "प्रोग्राम", lang)}{cartItems.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+
+              {/* Items */}
+              <div className="p-5 border-b space-y-3" style={{ borderColor: "var(--border-subtle)" }}>
+                {cartItems.map(prog => (
+                  <div key={prog.id} className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0" style={{ background: "var(--bg-muted)" }}>
+                      <img src={prog.image} alt={prog.title_en} className="w-full h-full object-cover" />
+                    </div>
+                    <p className={`t-xs text-[var(--text-primary)] flex-1 min-w-0 ${lang === "mr" ? "mr" : ""}`}>
+                      {lang === "en" ? prog.title_en : prog.title_mr}
+                    </p>
+                    <p className="t-xs font-medium text-[var(--text-primary)] shrink-0" style={{ fontFamily: "var(--font-mono)" }}>
+                      ₹{prog.price.toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Price breakdown */}
+              <div className="p-5 border-b space-y-2" style={{ borderColor: "var(--border-subtle)" }}>
+                <div className="flex justify-between">
+                  <span className={`t-xs text-[var(--text-muted)] ${lang === "mr" ? "mr" : ""}`}>{t("Subtotal", "उपएकूण", lang)}</span>
+                  <span className="t-xs text-[var(--text-primary)]" style={{ fontFamily: "var(--font-mono)" }}>₹{subtotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className={`t-xs text-[var(--text-muted)] ${lang === "mr" ? "mr" : ""}`}>{t("GST (18%)", "जीएसटी (१८%)", lang)}</span>
+                  <span className="t-xs text-[var(--text-muted)]" style={{ fontFamily: "var(--font-mono)" }}>₹{gst.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className="p-5 flex justify-between">
+                <span className={`t-small font-semibold text-[var(--text-primary)] ${lang === "mr" ? "mr" : ""}`}>{t("Total", "एकूण", lang)}</span>
+                <span className="t-h4 text-[var(--text-primary)]" style={{ fontFamily: "var(--font-mono)" }}>₹{total.toLocaleString()}</span>
+              </div>
+
+              {/* Trust badges */}
+              <div className="px-5 pb-5 space-y-2">
+                {[
+                  { en: "256-bit SSL encryption", mr: "२५६-बिट SSL एनक्रिप्शन" },
+                  { en: "Razorpay secured", mr: "Razorpay सुरक्षित" },
+                  { en: "WhatsApp confirmation", mr: "व्हॉट्सअॅप पुष्टीकरण" },
+                ].map(b => (
+                  <div key={b.en} className="flex items-center gap-2">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="var(--sage)" strokeWidth="1.75" className="shrink-0"><path d="M2 6l3 3 5-5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <span className={`t-xs text-[var(--text-muted)] ${lang === "mr" ? "mr" : ""}`}>{lang === "en" ? b.en : b.mr}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-          <div className="flex justify-between pt-3 mt-1">
-            <span className={`t-small font-semibold text-[var(--ink-80)] ${lang === "mr" ? "mr" : ""}`}>{t("Total paid", "एकूण भरले", lang)}</span>
-            <span className="font-semibold text-[var(--ink-80)]" style={{ fontFamily: "var(--font-display)" }}>₹{total.toLocaleString()}</span>
           </div>
         </div>
-
-        {/* Next steps */}
-        <div className="bg-[var(--sage-ghost)] border border-[var(--sage-pale)] rounded-2xl p-5 mb-6 text-left">
-          <p className={`t-small font-semibold text-[var(--ink-80)] mb-3 ${lang === "mr" ? "mr" : ""}`}>{t("What happens next", "पुढे काय होते", lang)}</p>
-          {[
-            { icon: "💬", en: "WhatsApp confirmation sent to your number", mr: "तुमच्या नंबरवर व्हॉट्सअॅप पुष्टी पाठवली" },
-            { icon: "📧", en: "Check email for program access details", mr: "प्रोग्राम प्रवेश तपशीलांसाठी ईमेल तपासा" },
-            { icon: "🤝", en: "Your coach will contact you within 24 hrs", mr: "तुमचा कोच २४ तासांत संपर्क करेल" },
-          ].map(step => (
-            <div key={step.en} className="flex items-start gap-3 py-2 border-b border-[var(--sage-pale)] last:border-0">
-              <span className="text-lg shrink-0">{step.icon}</span>
-              <p className={`t-small text-[var(--ink-60)] ${lang === "mr" ? "mr" : ""}`}>{lang === "en" ? step.en : step.mr}</p>
-            </div>
-          ))}
-        </div>
-
-        <button onClick={onHome} className="btn btn-lg btn-primary w-full justify-center">
-          <span className={lang === "mr" ? "mr" : ""}>{t("Go to My Dashboard →", "माझ्या डॅशबोर्डवर जा →", lang)}</span>
-        </button>
       </div>
     </div>
   );

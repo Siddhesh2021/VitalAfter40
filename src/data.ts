@@ -139,6 +139,23 @@ export const programs = [
     badge_mr: "",
     image: "https://images.unsplash.com/photo-1763403921315-f2ef8697199f?w=600&h=400&fit=crop&auto=format",
   },
+  {
+    id: "sexual-wellness",
+    icon: "❤️",
+    category: "wellness",
+    title_en: "Sexual Wellness",
+    title_mr: "लैंगिक वेलनेस",
+    desc_en: "Private, doctor-led consultations addressing intimacy, desire, and sexual health after 40. Confidential and judgement-free.",
+    desc_mr: "४० नंतर जिव्हाळा, इच्छा आणि लैंगिक आरोग्य संबोधित करणाऱ्या खाजगी, डॉक्टर-नेतृत्व सल्लामसलत.",
+    price: 1999,
+    duration_en: "45 min · Private consultation",
+    duration_mr: "४५ मिनिटे · खाजगी सल्लामसलत",
+    level_en: "All",
+    level_mr: "सर्व",
+    badge_en: "Confidential",
+    badge_mr: "गोपनीय",
+    image: "https://images.unsplash.com/photo-1600618528240-fb9fc964b853?w=600&h=400&fit=crop&auto=format",
+  },
 ];
 
 export const professionals = [
